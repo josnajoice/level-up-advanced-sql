@@ -143,4 +143,41 @@ INNER JOIN inventory i
 
  --Question 10
 
- 
+SELECT e.firstname, e.lastname,m.model,count(model) AS NumberSold,
+rank() OVER (PARTITION BY s.employeeId
+       order By count(model) DESC) AS Rank
+From Sales s
+INNER JOIN employee e
+ ON s.employeeId =  e.employeeId
+INNER JOIN inventory i
+ ON s.inventoryId = i.inventoryId
+INNER JOIN model m
+ ON i.modelId = m.modelId
+ GROUP BY e.firstname,e.lastname,m.model;
+
+ --Question 11
+With cte_Sales AS(
+SELECT strftime('%Y',soldDate) As SoldYear,
+      strftime('%m', SoldDate) As SoldMonth,
+      Sum(salesAmount) As SalesAmount
+FROM sales
+GROUP BY SoldYear,SoldMonth)
+SELECT SoldYear, SoldMonth, SalesAmount,
+SUM(salesAmount) OVER (PARTITION BY SoldYear 
+    Order by SoldYear, SoldMonth) AS AnnualRunningTotalSales
+FROM cte_Sales
+ORDER BY SoldYear,SoldMonth
+
+--Question 12
+
+SELECT Strftime('%Y-%m', soldDate) AS Soldmonth,
+      Count(*) As NumberofCarsSold,
+LAG (COUNT(*),1,0) OVER calMonth As LastMonthSold
+FROM sales
+GROUP BY Strftime('%Y-%m', soldDate)
+WINDOW calMonth AS(ORDER BY Strftime('%Y-%m', soldDate))
+ORDER BY Strftime('%Y-%m', soldDate);
+    
+
+
+
